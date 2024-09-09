@@ -1,41 +1,88 @@
-openapi: 3.0.3
+﻿openapi: 3.0.3
 info:
-  title: API Specification
-  version: 0.0.0
+  title: User Management API Specification
+  version: 1.0.0
   license:
     name: MIT
     url: https://opensource.org/license/mit/
 servers:
-  - url: http://localhost:5000
+  - url: http://localhost:5289
     description: Development Server
 tags:
-  - name: item
+  - name: User
+    description: User
 components:
   schemas:
-    Data:
+    Email:
       type: object
+      required:
+        - address
       properties:
-        name:
+        address:
           type: string
-    DataGetResponse:
+        description:
+          type: string
+    User:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+        name:
+          $ref: '#/components/schemas/UserName'
+        contact:
+          $ref: '#/components/schemas/UserContact'
+    UserName:
       type: object
       properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/Data'
-    DataPostRequest:
+        first:
+          type: string
+        middle:
+          type: string
+        last:
+          type: string
+        display:
+          type: string
+    UserContact:
       type: object
       properties:
-        data:
+        emailAddresses:
           type: array
           items:
-            $ref: '#/components/schemas/Data'
-    DataPostResponse:
+            $ref: '#/components/schemas/Email'
+    UserListGetResponse:
+      type: object
+      required:
+        - totalCount
+        - count
+        - users
+      properties:
+        totalCount:
+          type: integer
+          format: int64
+        count:
+          type: integer
+          format: int64
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    UserGetResponse:
+      allOf:
+        - $ref: '#/components/schemas/User'
+    UserCreateResponse:
       type: object
       properties:
         id:
           type: string
+    UserUpdateRequest:
+      type: object
+      properties:
+        name:
+          $ref: '#/components/schemas/UserName'
+        contact:
+          $ref: '#/components/schemas/UserContact'
   securitySchemes:
     apiKey:
       type: apiKey
@@ -45,64 +92,114 @@ components:
       type: http
       scheme: basic
 paths:
-  /{name}:
+  /users:
+    get:
+      tags:
+        - User
+      summary: summary of get
+      description: description
+      operationId: getUserList
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListGetResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '503':
+          description: Service Unavailable
+    post:
+      tags:
+        - User
+      summary: summary of post
+      description: description
+      operationId: createUser
+      responses:
+        '200':
+            description: success
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/UserCreateResponse'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '503':
+          description: Service Unavailable
+  /users/{id}:
     parameters:
-      - in: path
+      - name: id
+        in: path
         required: true
-        name: name
-        description: description
         schema:
           type: string
     get:
       tags:
-        - item
+        - User
       summary: summary of get
       description: description
-      operationId: getData
-      security:
-        - apiKey: []
-        - basicAuth: []
-      parameters:
-        - name: query
-          in: query
-          description: description
-          required: false
-          schema:
-            type: string
+      operationId: getUser
       responses:
         '200':
           description: success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DataGetResponse'
-    post:
+                $ref: '#/components/schemas/UserGetResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '503':
+          description: Service Unavailable
+    put:
       tags:
-        - item
-      summary: summary of post
+        - User
+      summary: summary of put
       description: description
-      operationId: postData
-      security:
-        - apiKey: []
-        - basicAuth: []
-      parameters:
-        - name: query
-          in: query
-          description: description
-          required: false
-          schema:
-            type: string
+      operationId: updateUser
       requestBody:
-        description: description
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DataPostRequest'
+              $ref: '#/components/schemas/UserUpdateRequest'
       responses:
-        '200':
-          description: success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DataPostResponse'
+        '202':
+          description: accepted
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '503':
+          description: Service Unavailable
+    delete:
+      tags:
+        - User
+      summary: summary of delete
+      description: description
+      operationId: deleteUser
+      responses:
+        '202':
+          description: accepted
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '503':
+          description: Service Unavailable
