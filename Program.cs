@@ -1,4 +1,4 @@
-// Copyright (c) 2024 RFull Development
+﻿// Copyright (c) 2024 RFull Development
 // This source code is managed under the MIT license. See LICENSE in the project root.
 using UserManagementApi.Handlers;
 
@@ -13,8 +13,6 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 builder.AddServiceDefaults();
 var app = builder.Build();
-
-app.MapDefaultEndpoints();
 
 app.AddUserHandler();
 

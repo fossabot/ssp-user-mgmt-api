@@ -24,19 +24,20 @@ namespace UserManagementApi.Handlers
             [FromQuery(Name = "limit")] int limit = 20
             )
         {
-            DatabaseClientFactory databaseClientFactory = new();
-            IUserDatabaseClient databaseClient = databaseClientFactory.CreateUserDatabaseClient();
-            UserAdapter adapter = new(databaseClient);
             List<Models.User>? users;
+            long totalCount;
             try
             {
+                DatabaseClientFactory databaseClientFactory = new();
+                IUserDatabaseClient databaseClient = databaseClientFactory.CreateUserDatabaseClient();
+                UserAdapter adapter = new(databaseClient);
                 users = await adapter.GetUserListAsync(startId, limit);
+                totalCount = await adapter.GetTotalCountAsync();
             }
             catch (ArgumentException)
             {
                 return Results.BadRequest();
             }
-            long totalCount = await adapter.GetTotalCountAsync();
             Models.UserListGetResponse response = new()
             {
                 TotalCount = totalCount,
@@ -48,10 +49,18 @@ namespace UserManagementApi.Handlers
 
         private static async Task<IResult> CreateUserAsync()
         {
-            DatabaseClientFactory databaseClientFactory = new();
-            IUserDatabaseClient databaseClient = databaseClientFactory.CreateUserDatabaseClient();
-            UserAdapter adapter = new(databaseClient);
-            string id = await adapter.CreateItemAsync();
+            string id;
+            try
+            {
+                DatabaseClientFactory databaseClientFactory = new();
+                IUserDatabaseClient databaseClient = databaseClientFactory.CreateUserDatabaseClient();
+                UserAdapter adapter = new(databaseClient);
+                id = await adapter.CreateItemAsync();
+            }
+            catch (ArgumentException)
+            {
+                return Results.BadRequest();
+            }
             Models.UserCreateResponse response = new()
             {
                 Id = id
@@ -63,10 +72,18 @@ namespace UserManagementApi.Handlers
             [FromRoute(Name = "id")] string id
             )
         {
-            DatabaseClientFactory databaseClientFactory = new();
-            IUserDatabaseClient databaseClient = databaseClientFactory.CreateUserDatabaseClient();
-            UserAdapter adapter = new(databaseClient);
-            Models.User? user = await adapter.GetUserAsync(id);
+            Models.User? user;
+            try
+            {
+                DatabaseClientFactory databaseClientFactory = new();
+                IUserDatabaseClient databaseClient = databaseClientFactory.CreateUserDatabaseClient();
+                UserAdapter adapter = new(databaseClient);
+                user = await adapter.GetUserAsync(id);
+            }
+            catch (ArgumentException)
+            {
+                return Results.BadRequest();
+            }
             if (user is null)
             {
                 return Results.NotFound();
@@ -85,16 +102,24 @@ namespace UserManagementApi.Handlers
             [FromBody] Models.UserUpdateRequest updateRequest
             )
         {
-            DatabaseClientFactory databaseClientFactory = new();
-            IUserDatabaseClient databaseClient = databaseClientFactory.CreateUserDatabaseClient();
-            UserAdapter adapter = new(databaseClient);
-            Models.User user = new()
+            bool success;
+            try
             {
-                Id = id,
-                Name = updateRequest.Name,
-                Contact = updateRequest.Contact
-            };
-            bool success = await adapter.UpdateUserAsync(user);
+                DatabaseClientFactory databaseClientFactory = new();
+                IUserDatabaseClient databaseClient = databaseClientFactory.CreateUserDatabaseClient();
+                UserAdapter adapter = new(databaseClient);
+                Models.User user = new()
+                {
+                    Id = id,
+                    Name = updateRequest.Name,
+                    Contact = updateRequest.Contact
+                };
+                success = await adapter.UpdateUserAsync(user);
+            }
+            catch (ArgumentException)
+            {
+                return Results.BadRequest();
+            }
             if (!success)
             {
                 return Results.NotFound();

@@ -174,15 +174,27 @@ namespace UserManagementApi.Database.Clients.Postgres
 
         public async Task<List<Models.List>> GetUserListAsync(Guid guid, int limit)
         {
-            if (guid == Guid.Empty)
-            {
-                throw new DatabaseParameterException(nameof(guid));
-            }
             limit = Math.Min(Math.Max(limit, 1), 128);
 
             string cte = $"{_schema}.item";
             string table = $"{_schema}.list";
             string columns = GenerateColumnListAllQuery(typeof(Models.List));
+            string condition;
+            if (guid != Guid.Empty)
+            {
+                condition = """
+                    	"id" >= (
+                    		SELECT
+                    			"id"
+                    		FROM
+                    			id_cte
+                    	)
+                    """;
+            }
+            else
+            {
+                condition = "TRUE";
+            }
             string query = $"""
                 WITH
                 	id_cte AS (
@@ -198,12 +210,7 @@ namespace UserManagementApi.Database.Clients.Postgres
                 FROM
                 	{table}
                 WHERE
-                	"id" >= (
-                		SELECT
-                			"id"
-                		FROM
-                			id_cte
-                	)
+                    {condition}
                 LIMIT
                 	@Limit;
                 """;
@@ -226,7 +233,7 @@ namespace UserManagementApi.Database.Clients.Postgres
                 WHERE
                     relname = 'item';
                 """;
-            long count = await _connection.ExecuteScalarAsync<long>(query);
+            long count = await _connection.ExecuteScalarAsync<long?>(query) ?? 0;
             return count;
         }
 
@@ -243,7 +250,7 @@ namespace UserManagementApi.Database.Clients.Postgres
                 LIMIT
                     1;
                 """;
-            Guid guid = await _connection.ExecuteScalarAsync<Guid>(query);
+            Guid guid = await _connection.ExecuteScalarAsync<Guid?>(query) ?? Guid.Empty;
             return guid;
         }
 
