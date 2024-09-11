@@ -1,6 +1,7 @@
 ﻿bin/
 obj/
-Properties/
+Properties/**/*/
+!Properties/LaunchSettings.json
 .vs/
 *.user
 *.http
