@@ -11,8 +11,4 @@ for file in $TARGET_FILES; do
         exit 1
     fi
 done
-
-# Clean up
-apt clean
-rm -rf /var/lib/apt/lists/*
 exit 0

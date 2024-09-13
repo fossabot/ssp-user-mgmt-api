@@ -1,6 +1,6 @@
 -- Database: user
 
--- DROP DATABASE IF EXISTS "user";
+DROP DATABASE IF EXISTS "user";
 
 CREATE DATABASE "user"
     WITH
